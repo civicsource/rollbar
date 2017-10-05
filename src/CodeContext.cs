@@ -1,0 +1,13 @@
+﻿using Newtonsoft.Json;
+
+namespace Archon.Rollbar
+{
+	class CodeContext
+	{
+		[JsonProperty("pre", DefaultValueHandling = DefaultValueHandling.Ignore)]
+		public string[] Pre { get; set; }
+
+		[JsonProperty("post", DefaultValueHandling = DefaultValueHandling.Ignore)]
+		public string[] Post { get; set; }
+	}
+}
