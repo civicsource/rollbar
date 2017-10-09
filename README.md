@@ -12,7 +12,7 @@ dotnet add Archon.Rollbar
 
 ### ASP.NET Core
 
-Configure it [like you would any other logger](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging):
+Configure it [like you would any other logger](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging). In your `Program.cs`:
 
 ```cs
 var webHost = new WebHostBuilder()
@@ -23,6 +23,14 @@ var webHost = new WebHostBuilder()
 		LogLevel.Warning // optional log level threshold: only logs at this level or higher will be sent to rollbar (e.g. Warning, Error, Critical)
 	));
 ```
+
+And then in your `Startup.Configure`, setup the rollbar request logger middleware:
+
+```cs
+app.UseRollbarRequestLogger();
+```
+
+Note: The `UseRollbarRequestLogger` extension method will [setup a middleware that will buffer the request body stream](https://stackoverflow.com/a/31395692/316108) so that the logger can read it & send it to rollbar. It is not required to use the logging integration if you do not care about providing any `POST` bodies to rollbar.
 
 You can then use `ILogger` or `ILogger<T>` [like you normally would](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging#how-to-create-logs) to create some logs that will show up in your rollbar account.
 

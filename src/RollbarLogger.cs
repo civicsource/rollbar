@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
@@ -98,7 +100,8 @@ namespace Archon.Rollbar
 				Custom = custom,
 				Level = level,
 				Person = CurrentPerson(),
-				Server = Server
+				Server = Server,
+				Request = BuildRequest()
 			});
 
 			if (eventId.Id != 0)
@@ -110,6 +113,66 @@ namespace Archon.Rollbar
 			string json = JsonConvert.SerializeObject(payload);
 
 			return client.PostAsync("item/", new StringContent(json, Encoding.UTF8, "application/json"));
+		}
+
+		Request BuildRequest()
+		{
+			var ctx = context?.HttpContext;
+			if (ctx == null) return null;
+
+			var req = ctx.Request;
+			if (req == null) return null;
+
+			var result = new Request
+			{
+				Url = $"{req.Scheme}://{req.Host}{req.PathBase}{req.Path}",
+				QueryString = req.QueryString.Value,
+				Method = req.Method.ToUpper(),
+				Headers = req.Headers.Aggregate(new Dictionary<string, string>(), (dic, item) =>
+				{
+					dic.Add(item.Key, (string)item.Value);
+					return dic;
+				}),
+				UserIp = ctx.Connection?.RemoteIpAddress?.ToString(),
+				PostBody = ReadPostBody(req.Body)
+			};
+
+			if (req.Query.Any())
+			{
+				result.GetParams = req.Query.Aggregate(new Dictionary<string, object>(), (dic, item) =>
+				{
+					dic.Add(item.Key, (string)item.Value);
+					return dic;
+				});
+			}
+
+			if (req.HasFormContentType && req.Form != null)
+			{
+				result.PostParams = req.Form.Aggregate(new Dictionary<string, object>(), (dic, item) =>
+				{
+					dic.Add(item.Key, (string)item.Value);
+					return dic;
+				});
+			}
+
+			return result;
+		}
+
+		string ReadPostBody(Stream reqStream)
+		{
+			if (reqStream == null || reqStream == Stream.Null)
+				return null;
+
+			if (!reqStream.CanSeek)
+				// stream isn't rewindable; don't fuck with it
+				// need to call app.UseRollbarRequestLogger to get POST bodies
+				return null;
+
+			if (reqStream.Position != 0)
+				reqStream.Position = 0;
+
+			var reader = new StreamReader(reqStream);
+			return reader.ReadToEnd();
 		}
 
 		Person CurrentPerson()
