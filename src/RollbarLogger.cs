@@ -14,13 +14,13 @@ namespace Archon.Rollbar
 	{
 		const string OriginalFormatPropertyName = "{OriginalFormat}";
 
-		readonly HttpContext context;
+		readonly IHttpContextAccessor context;
 		readonly string category, accessToken, environment;
 		readonly HttpClient client;
 
 		public Server Server { get; set; }
 
-		public RollbarLogger(HttpContext context, HttpClient client, string category, string accessToken, string environment)
+		public RollbarLogger(IHttpContextAccessor context, HttpClient client, string category, string accessToken, string environment)
 		{
 			this.context = context;
 			this.category = category;
@@ -114,7 +114,7 @@ namespace Archon.Rollbar
 
 		Person CurrentPerson()
 		{
-			string username = context?.User?.FindFirst(ClaimTypes.Name)?.Value;
+			string username = context?.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value;
 
 			if (String.IsNullOrWhiteSpace(username))
 				return null;
@@ -122,7 +122,7 @@ namespace Archon.Rollbar
 			return new Person(username)
 			{
 				UserName = username,
-				Email = context?.User?.FindFirst(ClaimTypes.Email)?.Value
+				Email = context?.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value
 			};
 		}
 

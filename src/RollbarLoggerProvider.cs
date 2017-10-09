@@ -28,7 +28,7 @@ namespace Archon.Rollbar
 
 		public ILogger CreateLogger(string categoryName)
 		{
-			return new RollbarLogger(context?.HttpContext, client, categoryName, accessToken, environment)
+			return new RollbarLogger(context, client, categoryName, accessToken, environment)
 			{
 				Server = Server
 			};
