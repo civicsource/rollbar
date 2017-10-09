@@ -24,13 +24,13 @@ var webHost = new WebHostBuilder()
 	));
 ```
 
-And then in your `Startup.Configure`, setup the rollbar request logger middleware:
+And then in your `Startup.Configure`, setup the rollbar request logger middleware as the first middleware registration:
 
 ```cs
 app.UseRollbarRequestLogger();
 ```
 
-Note: The `UseRollbarRequestLogger` extension method will [setup a middleware that will buffer the request body stream](https://stackoverflow.com/a/31395692/316108) so that the logger can read it & send it to rollbar. It is not required to use the logging integration if you do not care about providing any `POST` bodies to rollbar.
+Note: The `UseRollbarRequestLogger` is not required. You only need to set that up if you want to send `POST` bodies to rollbar. The `UseRollbarRequestLogger` extension method will [setup a middleware that will buffer the request body stream](https://stackoverflow.com/a/31395692/316108) so that the logger can access/read it & send it to rollbar.
 
 You can then use `ILogger` or `ILogger<T>` [like you normally would](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging#how-to-create-logs) to create some logs that will show up in your rollbar account.
 
